@@ -1,98 +1,405 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend Assessment: Microservice Wallet System
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A scalable microservice-based wallet system built with **NestJS**, **gRPC**, **Prisma ORM**, and **PostgreSQL**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📋 Project Overview
 
-## Description
+This project demonstrates a production-grade microservice architecture with two independent services communicating via gRPC:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **User Service**: Manages user creation and retrieval
+- **Wallet Service**: Manages wallet balances with credit/debit operations
 
-## Project setup
+### Key Features
 
-```bash
-$ npm install
+✅ **gRPC Communication**: Inter-service communication using Protocol Buffers  
+✅ **Prisma ORM**: Type-safe database access with migrations  
+✅ **Validation**: Input validation using `class-validator`  
+✅ **Error Handling**: Comprehensive error handling with meaningful messages  
+✅ **Transactions**: Prisma transactions for atomic wallet operations  
+✅ **Structured Logging**: (Optional) PinoJS for structured logs  
+✅ **Monorepo Architecture**: Organized project structure with shared packages  
+
+---
+
+## 🏗️ Architecture
+
+```
+backend-assessment/
+├── apps/
+│   ├── user-service/          # User management service
+│   │   ├── src/
+│   │   │   ├── main.ts        # gRPC server entry point
+│   │   │   ├── user-service.module.ts
+│   │   │   ├── user-service.service.ts
+│   │   │   ├── user-service.controller.ts
+│   │   │   └── user.dto.ts
+│   │   └── test/
+│   │
+│   └── wallet-service/        # Wallet management service
+│       ├── src/
+│       │   ├── main.ts        # gRPC server entry point
+│       │   ├── wallet-service.module.ts
+│       │   ├── wallet-service.service.ts
+│       │   ├── wallet-service.controller.ts
+│       │   └── wallet.dto.ts
+│       └── test/
+│
+├── packages/
+│   ├── prisma/
+│   │   ├── schema.prisma      # Database schema
+│   │   └── migrations/        # Migration files
+│   ├── proto/
+│   │   ├── user-service.proto     # User service gRPC definitions
+│   │   └── wallet-service.proto   # Wallet service gRPC definitions
+│   └── prisma.config.ts       # Prisma configuration
+│
+├── .env                       # Environment variables
+├── .env.example              # Example environment variables
+├── nest-cli.json             # Nest CLI configuration
+├── package.json              # Dependencies
+└── README.md
 ```
 
-## Compile and run the project
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js** v18+ and **npm**
+- **PostgreSQL** 12+ running locally or remotely
+
+### 1. Setup Environment
 
 ```bash
-# development
-$ npm run start
+# Copy environment file
+cp .env.example .env
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Update .env with your PostgreSQL credentials
+# Example:
+# DATABASE_URL="postgresql://postgres:password@localhost:5432/backend_assessment?schema=public"
 ```
 
-## Run tests
+### 2. Install Dependencies
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm install
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 3. Setup Database
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+cd packages
+
+# Generate Prisma client
+npx prisma generate
+
+# Run migrations (creates User and Wallet tables)
+npx prisma migrate dev --name init
+
+# (Optional) View database with Prisma Studio
+npx prisma studio
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 4. Build Services
 
-## Resources
+```bash
+npm run build
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+### 5. Run Services
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+**Terminal 1 - User Service:**
+```bash
+npm start user-service
+# Output: User Service is running on port 50051
+```
 
-## Support
+**Terminal 2 - Wallet Service:**
+```bash
+npm start wallet-service
+# Output: Wallet Service is running on port 50052
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+## 📡 gRPC Endpoints
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### User Service (Port 50051)
 
-## License
+#### `CreateUser`
+Creates a new user.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**Request:**
+```protobuf
+message CreateUserRequest {
+  string email = 1;
+  string name = 2;
+}
+```
+
+**Response:**
+```protobuf
+message CreateUserResponse {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  string createdAt = 4;
+}
+```
+
+#### `GetUserById`
+Retrieves user by ID.
+
+**Request:**
+```protobuf
+message GetUserByIdRequest {
+  string id = 1;
+}
+```
+
+---
+
+### Wallet Service (Port 50052)
+
+#### `CreateWallet`
+Creates a wallet for a user (requires user to exist).
+
+#### `GetWallet`
+Retrieves wallet balance for a user.
+
+#### `CreditWallet`
+Adds funds to a wallet.
+
+#### `DebitWallet`
+Deducts funds from a wallet (with balance validation).
+
+---
+
+## 🧪 Testing with gRPC Clients
+
+### Using grpcurl
+
+Install grpcurl:
+```bash
+# On Windows with Chocolatey
+choco install grpcurl
+
+# Or download from https://github.com/fullstorydev/grpcurl
+```
+
+#### Create User
+```bash
+grpcurl -plaintext \
+  -d '{"email": "user@example.com", "name": "John Doe"}' \
+  localhost:50051 user.UserService/CreateUser
+```
+
+**Example Response:**
+```json
+{
+  "id": "clx123abc456",
+  "email": "user@example.com",
+  "name": "John Doe",
+  "createdAt": "2024-04-05T10:30:00Z"
+}
+```
+
+#### Get User by ID
+```bash
+grpcurl -plaintext \
+  -d '{"id": "clx123abc456"}' \
+  localhost:50051 user.UserService/GetUserById
+```
+
+#### Create Wallet
+```bash
+grpcurl -plaintext \
+  -d '{"userId": "clx123abc456"}' \
+  localhost:50052 wallet.WalletService/CreateWallet
+```
+
+**Example Response:**
+```json
+{
+  "id": "cwl456def789",
+  "userId": "clx123abc456",
+  "balance": 0,
+  "createdAt": "2024-04-05T10:32:00Z"
+}
+```
+
+#### Credit Wallet
+```bash
+grpcurl -plaintext \
+  -d '{"userId": "clx123abc456", "amount": 100.50}' \
+  localhost:50052 wallet.WalletService/CreditWallet
+```
+
+**Example Response:**
+```json
+{
+  "id": "cwl456def789",
+  "userId": "clx123abc456",
+  "balance": 100.5
+}
+```
+
+#### Debit Wallet
+```bash
+grpcurl -plaintext \
+  -d '{"userId": "clx123abc456", "amount": 25.00}' \
+  localhost:50052 wallet.WalletService/DebitWallet
+```
+
+**Example Response:**
+```json
+{
+  "id": "cwl456def789",
+  "userId": "clx123abc456",
+  "balance": 75.5
+}
+```
+
+---
+
+### Using Postman
+
+Import the included `postman-collection.json` (if available) or manually create requests with gRPC type set to "gRPC Request".
+
+---
+
+## 🗄️ Database Schema
+
+### User Table
+```sql
+CREATE TABLE "users" (
+  id        VARCHAR(255) PRIMARY KEY,
+  email     VARCHAR(255) UNIQUE NOT NULL,
+  name      VARCHAR(255) NOT NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Wallet Table
+```sql
+CREATE TABLE "wallets" (
+  id        VARCHAR(255) PRIMARY KEY,
+  userId    VARCHAR(255) UNIQUE NOT NULL,
+  balance   FLOAT DEFAULT 0,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (userId) REFERENCES "users"(id) ON DELETE CASCADE
+);
+```
+
+---
+
+## 📝 Scripts
+
+```bash
+# Development
+npm run start:dev          # Run with watch mode
+
+# Building
+npm run build              # Build all services
+
+# Testing
+npm test                   # Run unit tests
+npm run test:watch         # Run tests in watch mode
+npm run test:e2e           # Run E2E tests
+
+# Formatting
+npm run format             # Format code with Prettier
+npm run lint               # Lint code with ESLint
+```
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:password@localhost:5432/backend_assessment` |
+| `USER_SERVICE_GRPC_PORT` | User service gRPC port | `50051` |
+| `WALLET_SERVICE_GRPC_PORT` | Wallet service gRPC port | `50052` |
+
+---
+
+## 🔐 Error Handling
+
+The system handles the following error scenarios:
+
+| Error | Scenario | Message |
+|-------|----------|---------|
+| `NOT_FOUND` | User not found | "User with ID {id} not found" |
+| `NOT_FOUND` | Wallet not found | "Wallet not found for this user" |
+| `INVALID_ARGUMENT` | Wallet already exists | "Wallet already exists for this user" |
+| `INVALID_ARGUMENT` | Insufficient balance | "Insufficient balance" |
+| `INVALID_ARGUMENT` | Invalid input | Validation error details |
+
+---
+
+## 📦 Technologies Used
+
+- **NestJS 11** - Progressive Node.js framework
+- **gRPC & Protocol Buffers** - High-performance IPC
+- **Prisma 7** - Next-generation ORM
+- **PostgreSQL** - Relational database
+- **TypeScript** - Type-safe JavaScript
+- **class-validator** - Input validation
+- **class-transformer** - Data transformation
+- **Pino** - Structured logging (optional)
+
+---
+
+## 🙋 Development Notes
+
+### Adding New Services
+
+1. Generate new service: `nest g app service-name`
+2. Create proto files in `packages/proto/`
+3. Implement service following the same pattern
+4. Register in `nest-cli.json`
+
+### Prisma Migrations
+
+After schema changes:
+```bash
+cd packages
+npx prisma migrate dev --name migration_name
+```
+
+### Database Queries
+
+Use Prisma Studio to explore data:
+```bash
+cd packages
+npx prisma studio
+```
+
+---
+
+## 💡 Bonus Features Implemented
+
+✅ **Transactions**: Wallet debit operations use Prisma transactions  
+✅ **Validation**: All inputs validated with `class-validator`  
+✅ **Error Handling**: Comprehensive error responses  
+✅ **gRPC Communication**: Wallet Service calls User Service to verify users  
+✅ **Type Safety**: Full TypeScript support  
+
+---
+
+## 📄 License
+
+UNLICENSED
+
+---
+
+## 📧 Support
+
+For issues or questions about the implementation, refer to:
+- [NestJS Documentation](https://docs.nestjs.com/)
+- [gRPC Documentation](https://grpc.io/docs/)
+- [Prisma Documentation](https://www.prisma.io/docs/)
