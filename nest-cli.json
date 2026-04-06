@@ -4,7 +4,7 @@
   "sourceRoot": "apps/user-service/src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "webpack": true,
+    "webpack": false,
     "tsConfigPath": "apps/user-service/tsconfig.app.json"
   },
   "monorepo": true,
@@ -16,8 +16,10 @@
       "entryFile": "main",
       "sourceRoot": "apps/user-service/src",
       "compilerOptions": {
+        "webpack": false,
         "tsConfigPath": "apps/user-service/tsconfig.app.json"
       }
+      
     },
     "wallet-service": {
       "type": "application",

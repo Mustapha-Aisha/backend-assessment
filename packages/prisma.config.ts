@@ -1,9 +1,11 @@
-import 'dotenv/config'; // Automatically loads your .env file
+import 'dotenv/config';
 import { defineConfig, env } from 'prisma/config';
 
+
+
 export default defineConfig({
-  schema: './packages/prisma/schema.prisma', 
+  schema: './prisma/schema.prisma',
   datasource: {
     url: env('DATABASE_URL'),
-  }
+  },
 });
