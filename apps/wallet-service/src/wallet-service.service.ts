@@ -34,6 +34,7 @@ export class WalletServiceService {
     // Verify user exists by calling User Service
     try {
       await this.userService.getUserById({ id: createWalletDto.userId }).toPromise();
+      
     } catch (error) {
       throw new NotFoundException('User not found');
     }
@@ -101,7 +102,6 @@ export class WalletServiceService {
       throw new BadRequestException('Insufficient balance');
     }
 
-    // Using Prisma transaction for debit operation
     const updatedWallet = await this.prisma.$transaction(async (tx) => {
       return tx.wallet.update({
         where: { id: wallet.id },

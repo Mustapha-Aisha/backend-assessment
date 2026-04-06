@@ -1,23 +1,30 @@
 # Backend Assessment: Microservice Wallet System
 
-A scalable microservice-based wallet system built with **NestJS**, **gRPC**, **Prisma ORM**, and **PostgreSQL**.
+A production-grade microservice wallet system built with **NestJS**, **gRPC**, **Prisma ORM**, and **PostgreSQL**, designed with scalability, separation of concerns, and fault tolerance in mind.
 
-## 📋 Project Overview
+---
 
-This project demonstrates a production-grade microservice architecture with two independent services communicating via gRPC:
+## 🚀 Overview
 
-- **User Service**: Manages user creation and retrieval
-- **Wallet Service**: Manages wallet balances with credit/debit operations
+This project implements a **distributed backend architecture** with two independent services communicating via **gRPC**:
 
-### Key Features
+* **User Service** → Owns user lifecycle (creation & retrieval)
+* **Wallet Service** → Owns wallet state (balance, credit, debit)
 
-✅ **gRPC Communication**: Inter-service communication using Protocol Buffers  
-✅ **Prisma ORM**: Type-safe database access with migrations  
-✅ **Validation**: Input validation using `class-validator`  
-✅ **Error Handling**: Comprehensive error handling with meaningful messages  
-✅ **Transactions**: Prisma transactions for atomic wallet operations  
-✅ **Structured Logging**: (Optional) PinoJS for structured logs  
-✅ **Monorepo Architecture**: Organized project structure with shared packages  
+The system enforces **strict service boundaries**:
+
+> The Wallet Service never assumes user existence — it verifies via User Service using gRPC.
+
+---
+
+## 🧠 Key Engineering Decisions
+
+* **gRPC over REST** → Efficient, strongly-typed inter-service communication
+* **Prisma ORM** → Type-safe database access with migrations
+* **Monorepo Architecture** → Shared contracts (proto) + shared DB schema
+* **Transactions** → Ensures atomicity for wallet debit operations
+* **Validation Layer** → Prevents invalid data at service boundaries
+* **Explicit Error Handling** → Predictable system behavior under failure
 
 ---
 
@@ -26,59 +33,28 @@ This project demonstrates a production-grade microservice architecture with two 
 ```
 backend-assessment/
 ├── apps/
-│   ├── user-service/          # User management service
-│   │   ├── src/
-│   │   │   ├── main.ts        # gRPC server entry point
-│   │   │   ├── user-service.module.ts
-│   │   │   ├── user-service.service.ts
-│   │   │   ├── user-service.controller.ts
-│   │   │   └── user.dto.ts
-│   │   └── test/
-│   │
-│   └── wallet-service/        # Wallet management service
-│       ├── src/
-│       │   ├── main.ts        # gRPC server entry point
-│       │   ├── wallet-service.module.ts
-│       │   ├── wallet-service.service.ts
-│       │   ├── wallet-service.controller.ts
-│       │   └── wallet.dto.ts
-│       └── test/
+│   ├── user-service/
+│   └── wallet-service/
 │
 ├── packages/
-│   ├── prisma/
-│   │   ├── schema.prisma      # Database schema
-│   │   └── migrations/        # Migration files
-│   ├── proto/
-│   │   ├── user-service.proto     # User service gRPC definitions
-│   │   └── wallet-service.proto   # Wallet service gRPC definitions
-│   └── prisma.config.ts       # Prisma configuration
+│   ├── proto/     # gRPC contracts (single source of truth)
+│   └── prisma/    # Database schema & migrations
 │
-├── .env                       # Environment variables
-├── .env.example              # Example environment variables
-├── nest-cli.json             # Nest CLI configuration
-├── package.json              # Dependencies
 └── README.md
 ```
 
 ---
 
-## 🚀 Getting Started
+## ⚙️ Setup Instructions
 
-### Prerequisites
-
-- **Node.js** v18+ and **npm**
-- **PostgreSQL** 12+ running locally or remotely
-
-### 1. Setup Environment
+### 1. Clone Repository
 
 ```bash
-# Copy environment file
-cp .env.example .env
-
-# Update .env with your PostgreSQL credentials
-# Example:
-# DATABASE_URL="postgresql://postgres:password@localhost:5432/backend_assessment?schema=public"
+git clone https://github.com/Mustapha-Aisha/backend-assessment.git
+cd backend-assessment
 ```
+
+---
 
 ### 2. Install Dependencies
 
@@ -86,320 +62,221 @@ cp .env.example .env
 npm install
 ```
 
-### 3. Setup Database
+---
+
+### 3. Configure Environment
 
 ```bash
-cd packages
+cp .env.example .env
+```
 
-# Generate Prisma client
+Update:
+
+```env
+DATABASE_URL="postgresql://postgres:password@localhost:5432/backend_assessment"
+```
+
+---
+
+### 4. Setup Database
+
+```bash
+npx prisma migrate dev --schema=packages/prisma/schema.prisma
 npx prisma generate
-
-# Run migrations (creates User and Wallet tables)
-npx prisma migrate dev --name init
-
-# (Optional) View database with Prisma Studio
-npx prisma studio
 ```
 
-### 4. Build Services
+👉 This step is **required** — it creates the User and Wallet tables.
 
-```bash
-npm run build
-```
+---
 
 ### 5. Run Services
 
-**Terminal 1 - User Service:**
+#### Terminal 1 — User Service
+
 ```bash
-npm start user-service
-# Output: User Service is running on port 50051
+npm run start user-service
 ```
 
-**Terminal 2 - Wallet Service:**
-```bash
-npm start wallet-service
-# Output: Wallet Service is running on port 50052
+Runs on:
+
 ```
+localhost:50051
+```
+
+---
+
+#### Terminal 2 — Wallet Service
+
+```bash
+npm run start wallet-service
+```
+
+Runs on:
+
+```
+localhost:50052
+```
+
+---
+
+## 🔗 Service Interaction Flow
+
+### Create Wallet Flow
+
+1. Wallet Service receives request
+2. Calls:
+
+   ```
+   UserService.GetUserById
+   ```
+3. If user exists → wallet is created
+4. If not → request fails
+
+👉 This ensures **data integrity across services**
 
 ---
 
 ## 📡 gRPC Endpoints
 
-### User Service (Port 50051)
+### User Service
 
-#### `CreateUser`
-Creates a new user.
-
-**Request:**
-```protobuf
-message CreateUserRequest {
-  string email = 1;
-  string name = 2;
-}
-```
-
-**Response:**
-```protobuf
-message CreateUserResponse {
-  string id = 1;
-  string email = 2;
-  string name = 3;
-  string createdAt = 4;
-}
-```
-
-#### `GetUserById`
-Retrieves user by ID.
-
-**Request:**
-```protobuf
-message GetUserByIdRequest {
-  string id = 1;
-}
-```
+* `CreateUser`
+* `GetUserById`
 
 ---
 
-### Wallet Service (Port 50052)
+### Wallet Service
 
-#### `CreateWallet`
-Creates a wallet for a user (requires user to exist).
-
-#### `GetWallet`
-Retrieves wallet balance for a user.
-
-#### `CreditWallet`
-Adds funds to a wallet.
-
-#### `DebitWallet`
-Deducts funds from a wallet (with balance validation).
+* `CreateWallet`
+* `GetWallet`
+* `CreditWallet`
+* `DebitWallet`
 
 ---
 
-## 🧪 Testing with gRPC Clients
+## 🧪 Testing the System
 
-### Using grpcurl
+### Recommended Tool: `grpcurl`
 
-Install grpcurl:
-```bash
-# On Windows with Chocolatey
-choco install grpcurl
+---
 
-# Or download from https://github.com/fullstorydev/grpcurl
-```
+### 1. Create User
 
-#### Create User
 ```bash
 grpcurl -plaintext \
-  -d '{"email": "user@example.com", "name": "John Doe"}' \
+  -d '{"email":"user@example.com","name":"Aisha"}' \
   localhost:50051 user.UserService/CreateUser
 ```
 
-**Example Response:**
-```json
-{
-  "id": "clx123abc456",
-  "email": "user@example.com",
-  "name": "John Doe",
-  "createdAt": "2024-04-05T10:30:00Z"
-}
-```
+---
 
-#### Get User by ID
+### 2. Get User
+
 ```bash
 grpcurl -plaintext \
-  -d '{"id": "clx123abc456"}' \
+  -d '{"id":"USER_ID"}' \
   localhost:50051 user.UserService/GetUserById
 ```
 
-#### Create Wallet
+---
+
+### 3. Create Wallet
+
 ```bash
 grpcurl -plaintext \
-  -d '{"userId": "clx123abc456"}' \
+  -d '{"userId":"USER_ID"}' \
   localhost:50052 wallet.WalletService/CreateWallet
 ```
 
-**Example Response:**
-```json
-{
-  "id": "cwl456def789",
-  "userId": "clx123abc456",
-  "balance": 0,
-  "createdAt": "2024-04-05T10:32:00Z"
-}
-```
+---
 
-#### Credit Wallet
+### 4. Credit Wallet
+
 ```bash
 grpcurl -plaintext \
-  -d '{"userId": "clx123abc456", "amount": 100.50}' \
+  -d '{"userId":"USER_ID","amount":100}' \
   localhost:50052 wallet.WalletService/CreditWallet
 ```
 
-**Example Response:**
-```json
-{
-  "id": "cwl456def789",
-  "userId": "clx123abc456",
-  "balance": 100.5
-}
-```
+---
 
-#### Debit Wallet
+### 5. Debit Wallet
+
 ```bash
 grpcurl -plaintext \
-  -d '{"userId": "clx123abc456", "amount": 25.00}' \
+  -d '{"userId":"USER_ID","amount":50}' \
   localhost:50052 wallet.WalletService/DebitWallet
 ```
 
-**Example Response:**
-```json
-{
-  "id": "cwl456def789",
-  "userId": "clx123abc456",
-  "balance": 75.5
-}
-```
+---
+
+## ⚠️ Edge Cases Handled
+
+* User does not exist → request rejected
+* Wallet already exists → prevented
+* Wallet not found → handled
+* Insufficient balance → transaction fails safely
+* Invalid input → validation errors returned
 
 ---
 
-### Using Postman
+## 🗄️ Database Design
 
-Import the included `postman-collection.json` (if available) or manually create requests with gRPC type set to "gRPC Request".
+### User
 
----
+* id (UUID)
+* email (unique)
+* name
+* createdAt
 
-## 🗄️ Database Schema
+### Wallet
 
-### User Table
-```sql
-CREATE TABLE "users" (
-  id        VARCHAR(255) PRIMARY KEY,
-  email     VARCHAR(255) UNIQUE NOT NULL,
-  name      VARCHAR(255) NOT NULL,
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### Wallet Table
-```sql
-CREATE TABLE "wallets" (
-  id        VARCHAR(255) PRIMARY KEY,
-  userId    VARCHAR(255) UNIQUE NOT NULL,
-  balance   FLOAT DEFAULT 0,
-  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (userId) REFERENCES "users"(id) ON DELETE CASCADE
-);
-```
+* id (UUID)
+* userId (unique)
+* balance (default: 0)
+* createdAt
 
 ---
 
-## 📝 Scripts
+## 🔒 Data Consistency Strategy
+
+* Wallet operations are isolated within Wallet Service
+* Cross-service validation done via gRPC
+* Debit operations wrapped in **Prisma transactions**
+
+---
+
+## 📦 Scripts
 
 ```bash
-# Development
-npm run start:dev          # Run with watch mode
-
-# Building
-npm run build              # Build all services
-
-# Testing
-npm test                   # Run unit tests
-npm run test:watch         # Run tests in watch mode
-npm run test:e2e           # Run E2E tests
-
-# Formatting
-npm run format             # Format code with Prettier
-npm run lint               # Lint code with ESLint
+npm run build
+npm run start
+npm run start:dev
+npm run test
+npm run lint
 ```
 
 ---
 
-## ⚙️ Configuration
+## 🏆 Bonus Features Implemented
 
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:password@localhost:5432/backend_assessment` |
-| `USER_SERVICE_GRPC_PORT` | User service gRPC port | `50051` |
-| `WALLET_SERVICE_GRPC_PORT` | Wallet service gRPC port | `50052` |
+* ✅ Prisma transactions for safe debit operations
+* ✅ Input validation using class-validator
+* ✅ Structured error handling
+* ✅ gRPC-based service-to-service verification
+* ✅ Clean monorepo architecture
 
 ---
 
-## 🔐 Error Handling
+## 🧠 What This Project Demonstrates
 
-The system handles the following error scenarios:
-
-| Error | Scenario | Message |
-|-------|----------|---------|
-| `NOT_FOUND` | User not found | "User with ID {id} not found" |
-| `NOT_FOUND` | Wallet not found | "Wallet not found for this user" |
-| `INVALID_ARGUMENT` | Wallet already exists | "Wallet already exists for this user" |
-| `INVALID_ARGUMENT` | Insufficient balance | "Insufficient balance" |
-| `INVALID_ARGUMENT` | Invalid input | Validation error details |
-
----
-
-## 📦 Technologies Used
-
-- **NestJS 11** - Progressive Node.js framework
-- **gRPC & Protocol Buffers** - High-performance IPC
-- **Prisma 7** - Next-generation ORM
-- **PostgreSQL** - Relational database
-- **TypeScript** - Type-safe JavaScript
-- **class-validator** - Input validation
-- **class-transformer** - Data transformation
-- **Pino** - Structured logging (optional)
-
----
-
-## 🙋 Development Notes
-
-### Adding New Services
-
-1. Generate new service: `nest g app service-name`
-2. Create proto files in `packages/proto/`
-3. Implement service following the same pattern
-4. Register in `nest-cli.json`
-
-### Prisma Migrations
-
-After schema changes:
-```bash
-cd packages
-npx prisma migrate dev --name migration_name
-```
-
-### Database Queries
-
-Use Prisma Studio to explore data:
-```bash
-cd packages
-npx prisma studio
-```
-
----
-
-## 💡 Bonus Features Implemented
-
-✅ **Transactions**: Wallet debit operations use Prisma transactions  
-✅ **Validation**: All inputs validated with `class-validator`  
-✅ **Error Handling**: Comprehensive error responses  
-✅ **gRPC Communication**: Wallet Service calls User Service to verify users  
-✅ **Type Safety**: Full TypeScript support  
+* Service boundary design
+* Distributed system communication
+* Data integrity across services
+* Production-style backend structuring
 
 ---
 
 ## 📄 License
 
 UNLICENSED
-
----
-
-## 📧 Support
-
-For issues or questions about the implementation, refer to:
-- [NestJS Documentation](https://docs.nestjs.com/)
-- [gRPC Documentation](https://grpc.io/docs/)
-- [Prisma Documentation](https://www.prisma.io/docs/)
